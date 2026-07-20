@@ -7,6 +7,7 @@ const AccountsLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const { login, logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -116,8 +117,15 @@ const AccountsLogin = () => {
         <div className="mt-2 text-center">
           <button
             onClick={fillCredentials}
-            className="btn btn-outline-success btn-sm w-100 mb-3"
-            style={{ color: '#198754', borderColor: '#198754' }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            className="btn btn-sm w-100 mb-3"
+            style={{
+              color: hovered ? '#ffffff' : '#198754',
+              borderColor: '#198754',
+              backgroundColor: hovered ? '#198754' : 'transparent',
+              transition: 'all 0.2s ease-in-out'
+            }}
           >
             Use Accounts Demo Credentials
           </button>

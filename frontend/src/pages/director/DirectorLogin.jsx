@@ -7,6 +7,7 @@ const DirectorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const { login, logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -116,8 +117,15 @@ const DirectorLogin = () => {
         <div className="mt-2 text-center">
           <button
             onClick={fillCredentials}
-            className="btn btn-outline-primary btn-sm w-100 mb-3"
-            style={{ color: '#6f42c1', borderColor: '#6f42c1' }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            className="btn btn-sm w-100 mb-3"
+            style={{
+              color: hovered ? '#ffffff' : '#6f42c1',
+              borderColor: '#6f42c1',
+              backgroundColor: hovered ? '#6f42c1' : 'transparent',
+              transition: 'all 0.2s ease-in-out'
+            }}
           >
             Use Director Demo Credentials
           </button>
