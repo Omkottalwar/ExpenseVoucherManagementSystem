@@ -1,4 +1,34 @@
 const nodemailer = require('nodemailer');
+const https = require('https');
+
+// Helper to make HTTPS requests without external dependencies (compatible with older Node.js versions)
+const makeHttpsRequest = (url, options, body) => {
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const parsedData = JSON.parse(data);
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode, data: parsedData });
+        } catch (e) {
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode, raw: data });
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(e);
+    });
+
+    if (body) {
+      req.write(typeof body === 'string' ? body : JSON.stringify(body));
+    }
+    req.end();
+  });
+};
 
 const getEmailHtml = (email, name, password, role) => {
   return `
@@ -88,34 +118,32 @@ const sendCredentialsEmail = async (email, name, password, role) => {
     console.error('Resend API key is not configured in environment variables.');
     return { success: false, error: 'Email service configuration error: Resend API key missing.' };
   }
-  const url = 'https://api.resend.com/emails';
   
-  // Overriding recipient to omkottalwar17@gmail.com for Resend sandbox testing
   const resendRecipient = 'omkottalwar17@gmail.com';
   const htmlContent = getEmailHtml(email, name, password, role);
 
   try {
-    const response = await fetch(url, {
+    const payload = {
+      from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
+      to: resendRecipient,
+      subject: `Your ExpenseVoucher Credentials (Redirected for: ${email})`,
+      html: htmlContent,
+    };
+
+    const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
-        to: resendRecipient,
-        subject: `Your ExpenseVoucher Credentials (Redirected for: ${email})`,
-        html: htmlContent,
-      }),
-    });
+      }
+    }, payload);
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Resend API error response:', data);
-      return { success: false, error: data.message || 'Failed to send credentials email via Resend' };
+    if (!resResult.ok) {
+      console.error('Resend API error response:', resResult.data || resResult.raw);
+      return { success: false, error: (resResult.data && resResult.data.message) || 'Failed to send credentials email via Resend' };
     }
 
-    return { success: true, data };
+    return { success: true, data: resResult.data };
   } catch (error) {
     console.error('Failed to send credentials email via Resend:', error);
     return { success: false, error: error.message };
@@ -197,31 +225,29 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
     console.error('Resend API key is not configured in environment variables.');
     return { success: false, error: 'Email service configuration error: Resend API key missing.' };
   }
-  const url = 'https://api.resend.com/emails';
-  const htmlContent = getResetHtml();
 
   try {
-    const response = await fetch(url, {
+    const payload = {
+      from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
+      to: recipientEmail,
+      subject: `Reset your ExpenseVoucher Password [${portal} Portal]`,
+      html: htmlContent,
+    };
+
+    const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
-        to: recipientEmail,
-        subject: `Reset your ExpenseVoucher Password [${portal} Portal]`,
-        html: htmlContent,
-      }),
-    });
+      }
+    }, payload);
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Resend API reset error response:', data);
-      return { success: false, error: data.message || 'Failed to send reset email via Resend' };
+    if (!resResult.ok) {
+      console.error('Resend API reset error response:', resResult.data || resResult.raw);
+      return { success: false, error: (resResult.data && resResult.data.message) || 'Failed to send reset email via Resend' };
     }
 
-    return { success: true, data };
+    return { success: true, data: resResult.data };
   } catch (error) {
     console.error('Failed to send reset email via Resend:', error);
     return { success: false, error: error.message };
