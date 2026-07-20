@@ -89,6 +89,9 @@ const sendCredentialsEmail = async (email, name, password, role) => {
     return { success: false, error: 'Email service configuration error: Resend API key missing.' };
   }
   const url = 'https://api.resend.com/emails';
+  
+  // Overriding recipient to omkottalwar17@gmail.com for Resend sandbox testing
+  const resendRecipient = 'omkottalwar17@gmail.com';
   const htmlContent = getEmailHtml(email, name, password, role);
 
   try {
@@ -100,8 +103,8 @@ const sendCredentialsEmail = async (email, name, password, role) => {
       },
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
-        to: email,
-        subject: 'Your ExpenseVoucher Credentials',
+        to: resendRecipient,
+        subject: `Your ExpenseVoucher Credentials (Redirected for: ${email})`,
         html: htmlContent,
       }),
     });
