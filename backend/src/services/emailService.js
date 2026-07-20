@@ -200,6 +200,8 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
     `;
   };
 
+  const htmlContent = getResetHtml();
+
   // If SMTP configs are specified, prefer SMTP (Nodemailer)
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     try {
@@ -215,8 +217,6 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
         greetingTimeout: 3000,
         socketTimeout: 3000,
       });
-
-      const htmlContent = getResetHtml();
 
       const mailOptions = {
         from: process.env.SMTP_FROM_EMAIL || `ExpenseVoucher <${process.env.SMTP_USER}>`,
