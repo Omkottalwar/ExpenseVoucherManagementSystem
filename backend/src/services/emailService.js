@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const https = require('https');
+const dns = require('dns');
 
 // Helper to make HTTPS requests without external dependencies (compatible with older Node.js versions)
 const makeHttpsRequest = (url, options, body) => {
@@ -11,6 +12,11 @@ const makeHttpsRequest = (url, options, body) => {
       path: urlObj.pathname + urlObj.search,
       method: options.method || 'GET',
       headers: options.headers || {},
+      family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6-only DNS resolution
+      lookup: (hostname, opts, cb) => {
+        // Ensure DNS resolution uses IPv4
+        dns.lookup(hostname, { ...opts, family: 4 }, cb);
+      },
     };
 
     const req = https.request(requestOptions, (res) => {
@@ -102,9 +108,9 @@ const sendCredentialsEmail = async (email, name, password, role) => {
           pass: process.env.SMTP_PASS,
         },
         family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6 resolution
-        connectionTimeout: 3000, // 3 seconds
-        greetingTimeout: 3000,
-        socketTimeout: 3000,
+        connectionTimeout: 10000, // 10 seconds – 3s was too tight on some networks
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
       });
 
       const htmlContent = getEmailHtml(email, name, password, role);
@@ -132,14 +138,13 @@ const sendCredentialsEmail = async (email, name, password, role) => {
     return { success: false, error: 'Email service configuration error: Resend API key missing.' };
   }
   
-  const resendRecipient = 'omkottalwar17@gmail.com';
   const htmlContent = getEmailHtml(email, name, password, role);
 
   try {
     const payload = {
       from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
-      to: resendRecipient,
-      subject: `Your ExpenseVoucher Credentials (Redirected for: ${email})`,
+      to: email,
+      subject: 'Your ExpenseVoucher Credentials',
       html: htmlContent,
     };
 
@@ -215,9 +220,9 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
           pass: process.env.SMTP_PASS,
         },
         family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6 resolution
-        connectionTimeout: 3000, // 3 seconds
-        greetingTimeout: 3000,
-        socketTimeout: 3000,
+        connectionTimeout: 10000, // 10 seconds – 3s was too tight on some networks
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
       });
 
       const mailOptions = {
