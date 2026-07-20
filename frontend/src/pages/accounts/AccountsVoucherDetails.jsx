@@ -120,6 +120,14 @@ const AccountsVoucherDetails = () => {
                 <span className="text-secondary small fw-semibold d-block">Submission Date</span>
                 <span className="fw-medium">{new Date(voucher.createdAt).toLocaleDateString()}</span>
               </div>
+              <div className="col-sm-6 col-6">
+                <span className="text-secondary small fw-semibold d-block">Total Claim Amount</span>
+                <span className="fw-semibold text-success">₹{voucher.amount.toFixed(2)}</span>
+              </div>
+              <div className="col-sm-6 col-6">
+                <span className="text-secondary small fw-semibold d-block">Audit Status</span>
+                <span className="fw-semibold text-uppercase">{voucher.status}</span>
+              </div>
               <div className="col-md-12 col-12">
                 <span className="text-secondary small fw-semibold d-block">Description / Remarks</span>
                 <p className="bg-light p-3 rounded text-secondary small border-start border-4 border-secondary mt-1">
