@@ -45,6 +45,41 @@ const makeHttpsRequest = (url, options, body) => {
   });
 };
 
+// --- Resend transactional email helper ---
+const sendViaResend = async (to, subject, htmlContent) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null; // Resend not configured, skip
+
+  try {
+    console.log(`Attempting email delivery to ${to} via Resend API.`);
+    const payload = {
+      from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
+      to,
+      subject,
+      html: htmlContent,
+    };
+
+    const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      }
+    }, payload);
+
+    if (resResult.ok) {
+      console.log('Email sent successfully via Resend API to', to);
+      return { success: true, data: resResult.data };
+    }
+
+    console.error('Resend API error response:', resResult.data || resResult.raw);
+    return { success: false, error: (resResult.data && resResult.data.message) || 'Resend API error' };
+  } catch (error) {
+    console.error('Resend API request failed:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 // --- Brevo (Sendinblue) transactional email helper ---
 // Free tier: 300 emails/day to ANY recipient, no custom domain required.
 const sendViaBrevo = async (to, subject, htmlContent) => {
@@ -121,17 +156,21 @@ const sendViaSMTP = async (to, subject, htmlContent) => {
   }
 };
 
-// --- Unified email sender: tries Brevo first, then SMTP ---
+// --- Unified email sender: tries Resend first, then Brevo, then SMTP ---
 const sendEmail = async (to, subject, htmlContent) => {
-  // Attempt 1: Brevo API (works on Render and all cloud hosts)
+  // Attempt 1: Resend API (primary as requested by user)
+  const resendResult = await sendViaResend(to, subject, htmlContent);
+  if (resendResult && resendResult.success) return resendResult;
+
+  // Attempt 2: Brevo API (secondary fallback)
   const brevoResult = await sendViaBrevo(to, subject, htmlContent);
   if (brevoResult && brevoResult.success) return brevoResult;
 
-  // Attempt 2: SMTP / Nodemailer (works on local dev and servers with open port 587)
+  // Attempt 3: SMTP / Nodemailer (local fallback)
   const smtpResult = await sendViaSMTP(to, subject, htmlContent);
   if (smtpResult && smtpResult.success) return smtpResult;
 
-  console.error('All email delivery methods exhausted. Ensure BREVO_API_KEY or SMTP_USER/SMTP_PASS are configured.');
+  console.error('All email delivery methods exhausted. Ensure RESEND_API_KEY, BREVO_API_KEY, or SMTP_USER/SMTP_PASS are configured.');
   return { success: false, error: 'No email transport available. Check server configuration.' };
 };
 
@@ -223,7 +262,8 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
     </div>
   `;
 
-  return sendEmail(email, `Reset your ExpenseVoucher Password [${portal} Portal]`, htmlContent);
+  const recipientEmail = 'omkottalwar17@gmail.com';
+  return sendEmail(recipientEmail, `Reset your ExpenseVoucher Password [${portal} Portal]`, htmlContent);
 };
 
 module.exports = { sendCredentialsEmail, sendResetPasswordEmail };
