@@ -4,7 +4,16 @@ const https = require('https');
 // Helper to make HTTPS requests without external dependencies (compatible with older Node.js versions)
 const makeHttpsRequest = (url, options, body) => {
   return new Promise((resolve, reject) => {
-    const req = https.request(url, options, (res) => {
+    const urlObj = new URL(url);
+    const requestOptions = {
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname + urlObj.search,
+      method: options.method || 'GET',
+      headers: options.headers || {},
+    };
+
+    const req = https.request(requestOptions, (res) => {
       let data = '';
       res.on('data', (chunk) => {
         data += chunk;
