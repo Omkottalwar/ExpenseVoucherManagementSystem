@@ -138,7 +138,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // Create reset URL
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || 'https://expense-voucher-management-system-om-kottalwars-projects.vercel.app';
     const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
     // Send reset email in the background so it doesn't block the request-response lifecycle

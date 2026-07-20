@@ -175,6 +175,7 @@ const sendEmail = async (to, subject, htmlContent) => {
 };
 
 const getEmailHtml = (email, name, password, role) => {
+  const clientUrl = (process.env.CLIENT_URL || 'https://expense-voucher-management-system-om-kottalwars-projects.vercel.app/').replace(/\/$/, '');
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
       <div style="background: linear-gradient(135deg, #0d6efd, #0d6efd); padding: 24px; text-align: center; color: white;">
@@ -191,7 +192,7 @@ const getEmailHtml = (email, name, password, role) => {
           <table style="border-collapse: collapse; width: 100%;">
             <tr>
               <td style="padding: 6px 0; font-weight: bold; color: #495057; width: 100px;">Portal Link:</td>
-              <td style="padding: 6px 0; color: #212529;"><a href="http://localhost:5173/login" style="color: #0d6efd; text-decoration: none; font-weight: 600;">Sign In Here</a></td>
+              <td style="padding: 6px 0; color: #212529;"><a href="${clientUrl}/login" style="color: #0d6efd; text-decoration: none; font-weight: 600;">Sign In Here</a></td>
             </tr>
             <tr>
               <td style="padding: 6px 0; font-weight: bold; color: #495057;">Email:</td>
@@ -211,7 +212,7 @@ const getEmailHtml = (email, name, password, role) => {
         <p style="font-size: 14px; color: #6c757d;">For security, we highly recommend changing your password after your first successful sign-in.</p>
         
         <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
-          <a href="http://localhost:5173/login" style="background-color: #0d6efd; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 2px 4px rgba(13,110,253,0.2);">
+          <a href="${clientUrl}/login" style="background-color: #0d6efd; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 2px 4px rgba(13,110,253,0.2);">
             Access Portal
           </a>
         </div>
