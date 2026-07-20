@@ -201,12 +201,18 @@ exports.forgotPassword = async (req, res) => {
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
-    // Send email with portal name parameter
-    const emailResult = await sendResetPasswordEmail(user.email, user.name, resetUrl, portal);
-
-    if (!emailResult.success) {
-      return res.status(500).json({ success: false, message: emailResult.error || 'Email could not be sent' });
-    }
+    // Send reset email in the background so it doesn't block the request-response lifecycle
+    sendResetPasswordEmail(user.email, user.name, resetUrl, portal)
+      .then((emailResult) => {
+        if (emailResult.success) {
+          console.log(`Reset email sent successfully to ${user.email}`);
+        } else {
+          console.error(`Failed to send reset email to ${user.email}:`, emailResult.error);
+        }
+      })
+      .catch((err) => {
+        console.error(`Background reset email dispatcher error for ${user.email}:`, err);
+      });
 
     res.status(200).json({ success: true, message: 'Reset password link has been sent to your email.' });
   } catch (error) {
