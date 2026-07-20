@@ -83,7 +83,11 @@ const sendCredentialsEmail = async (email, name, password, role) => {
 
   // Fallback to Resend HTTP API
   console.log('Attempting delivery via Resend API.');
-  const apiKey = process.env.RESEND_API_KEY || 're_GzJRAVEH_61GXxcSzgqsot3CX3CbC1nk3';
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error('Resend API key is not configured in environment variables.');
+    return { success: false, error: 'Email service configuration error: Resend API key missing.' };
+  }
   const url = 'https://api.resend.com/emails';
   const htmlContent = getEmailHtml(email, name, password, role);
 
@@ -185,7 +189,11 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
 
   // Fallback to Resend API
   console.log('Attempting reset email delivery via Resend API.');
-  const apiKey = process.env.RESEND_API_KEY || 're_GzJRAVEH_61GXxcSzgqsot3CX3CbC1nk3';
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error('Resend API key is not configured in environment variables.');
+    return { success: false, error: 'Email service configuration error: Resend API key missing.' };
+  }
   const url = 'https://api.resend.com/emails';
   const htmlContent = getResetHtml();
 
