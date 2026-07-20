@@ -17,6 +17,7 @@ const VoucherDetailsApproval = () => {
   
   // Signature state
   const [signatureFile, setSignatureFile] = useState(null);
+  const [forceShowPad, setForceShowPad] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -43,8 +44,8 @@ const VoucherDetailsApproval = () => {
   };
 
   const handleApprove = async () => {
-    // We need a signature. Check if signatureFile is captured, or if director has a profile signature, or voucher already has directorSignatureUrl
-    const hasSignature = signatureFile || user.signatureUrl || voucher.directorSignatureUrl;
+    // If they choose to redraw, they must provide a new signatureFile. Otherwise profile/voucher signature is accepted.
+    const hasSignature = forceShowPad ? signatureFile : (signatureFile || user.signatureUrl || voucher.directorSignatureUrl);
 
     if (!hasSignature) {
       toast.error('Signature is mandatory before approving a voucher');
@@ -238,7 +239,7 @@ const VoucherDetailsApproval = () => {
               <h5 className="fw-bold mb-3">Review Panel</h5>
               
               {/* Profile signature alert */}
-              {user.signatureUrl && !signatureFile && (
+              {user.signatureUrl && !forceShowPad && !signatureFile && (
                 <div className="alert alert-info py-2 small mb-3">
                   <i className="bi bi-info-circle me-1"></i>
                   Using signature saved on your user profile.
@@ -246,7 +247,7 @@ const VoucherDetailsApproval = () => {
               )}
 
               {/* Signature drawing canvas */}
-              {!user.signatureUrl && !signatureFile && (
+              {(!user.signatureUrl || forceShowPad) && !signatureFile && (
                 <div className="mb-3">
                   <SignaturePad onSave={handleSignatureSave} label="Director Signature Required *" />
                 </div>
@@ -266,7 +267,7 @@ const VoucherDetailsApproval = () => {
                   className="btn btn-outline-secondary btn-sm w-100 mb-3"
                   onClick={() => {
                     setSignatureFile(null);
-                    // Temporarily wipe user signature URL visual cue to force pad redraw
+                    setForceShowPad(true);
                   }}
                 >
                   Change/Redraw Signature
