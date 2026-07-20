@@ -63,6 +63,15 @@ const seedDatabase = async () => {
         employeeId: 'EMP-103',
         signatureUrl: '',
       },
+      {
+        name: 'Om Kottalwar',
+        email: 'omkottalwar17@gmail.com',
+        password: 'Password123',
+        role: 'Employee',
+        department: 'Engineering',
+        employeeId: 'EMP-999',
+        signatureUrl: '',
+      },
     ]);
 
     const director = users[0];
