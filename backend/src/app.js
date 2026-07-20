@@ -10,10 +10,14 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
-// Enable CORS
+// Enable CORS (automatically strip any trailing slash from CLIENT_URL)
+const allowedOrigin = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.replace(/\/$/, '')
+  : 'http://localhost:5173';
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: allowedOrigin,
     credentials: true,
   })
 );
