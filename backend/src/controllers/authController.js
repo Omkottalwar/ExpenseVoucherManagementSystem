@@ -139,8 +139,18 @@ exports.addEmployee = async (req, res) => {
       department,
     });
 
-    // Send credentials email in background
-    const emailResult = await sendCredentialsEmail(email, name, password, role);
+    // Send credentials email asynchronously in the background so it doesn't block the HTTP response
+    sendCredentialsEmail(email, name, password, role)
+      .then((emailResult) => {
+        if (emailResult.success) {
+          console.log(`Credentials email sent successfully to ${email}`);
+        } else {
+          console.error(`Failed to send credentials email to ${email}:`, emailResult.error);
+        }
+      })
+      .catch((err) => {
+        console.error(`Background email dispatcher error for ${email}:`, err);
+      });
 
     res.status(201).json({
       success: true,
@@ -152,8 +162,7 @@ exports.addEmployee = async (req, res) => {
         employeeId: user.employeeId,
         department: user.department,
       },
-      emailSent: emailResult.success,
-      emailError: emailResult.success ? undefined : emailResult.error,
+      emailSent: true,
     });
   } catch (error) {
     console.error(error);

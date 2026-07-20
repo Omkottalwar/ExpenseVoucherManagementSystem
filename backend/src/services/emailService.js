@@ -77,14 +77,13 @@ const sendCredentialsEmail = async (email, name, password, role) => {
       console.log('Email sent successfully via SMTP:', info.messageId);
       return { success: true, data: info };
     } catch (error) {
-      console.error('Failed to send email via SMTP (Nodemailer):', error);
-      return { success: false, error: error.message };
+      console.error('Failed to send credentials email via SMTP (Nodemailer). Attempting Resend API fallback:', error);
     }
   }
 
-  // Otherwise, fall back to Resend HTTP API
-  console.log('SMTP not fully configured. Falling back to Resend API.');
-  const apiKey = process.env.RESEND_API_KEY || 're_eqhr4wym_9aQLNC7KoqJmYN8DhRnkyaSe';
+  // Fallback to Resend HTTP API
+  console.log('Attempting delivery via Resend API.');
+  const apiKey = process.env.RESEND_API_KEY || 're_GzJRAVEH_61GXxcSzgqsot3CX3CbC1nk3';
   const url = 'https://api.resend.com/emails';
   const htmlContent = getEmailHtml(email, name, password, role);
 
@@ -106,17 +105,15 @@ const sendCredentialsEmail = async (email, name, password, role) => {
     const data = await response.json();
     if (!response.ok) {
       console.error('Resend API error response:', data);
-      return { success: false, error: data.message || 'Failed to send email' };
+      return { success: false, error: data.message || 'Failed to send credentials email via Resend' };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Failed to send email via Resend:', error);
+    console.error('Failed to send credentials email via Resend:', error);
     return { success: false, error: error.message };
   }
 };
-
-module.exports = { sendCredentialsEmail };
 
 const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee') => {
   // Overriding recipient email to omkottalwar17@gmail.com for testing purposes since it is the only registered Resend email address
@@ -182,13 +179,12 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
       console.log('Reset email sent successfully via SMTP:', info.messageId);
       return { success: true, data: info };
     } catch (error) {
-      console.error('Failed to send reset email via SMTP (Nodemailer):', error);
-      return { success: false, error: error.message };
+      console.error('Failed to send reset email via SMTP (Nodemailer). Attempting Resend API fallback:', error);
     }
   }
 
-  // Otherwise, fall back to Resend API
-  console.log('SMTP not configured for reset. Using Resend API.');
+  // Fallback to Resend API
+  console.log('Attempting reset email delivery via Resend API.');
   const apiKey = process.env.RESEND_API_KEY || 're_GzJRAVEH_61GXxcSzgqsot3CX3CbC1nk3';
   const url = 'https://api.resend.com/emails';
   const htmlContent = getResetHtml();
@@ -211,7 +207,7 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
     const data = await response.json();
     if (!response.ok) {
       console.error('Resend API reset error response:', data);
-      return { success: false, error: data.message || 'Failed to send reset email' };
+      return { success: false, error: data.message || 'Failed to send reset email via Resend' };
     }
 
     return { success: true, data };
