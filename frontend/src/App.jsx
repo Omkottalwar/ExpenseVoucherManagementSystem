@@ -27,7 +27,6 @@ import VoucherDetailsApproval from './pages/director/VoucherDetailsApproval';
 import AccountsDashboard from './pages/accounts/AccountsDashboard';
 import AccountsAllVouchers from './pages/accounts/AccountsAllVouchers';
 import AccountsVoucherDetails from './pages/accounts/AccountsVoucherDetails';
-import AddEmployee from './pages/accounts/AddEmployee';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
@@ -152,14 +151,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/accounts/add-employee"
-                element={
-                  <ProtectedRoute allowedRoles={['Accounts']}>
-                    <AddEmployee />
-                  </ProtectedRoute>
-                }
-              />
+
 
               {/* Catch-all Routing */}
               <Route path="/" element={<Navigate to="/login" replace />} />

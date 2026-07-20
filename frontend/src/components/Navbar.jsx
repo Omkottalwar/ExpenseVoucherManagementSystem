@@ -94,11 +94,6 @@ const Navbar = () => {
                     All Vouchers
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link className={`nav-link ${isActive('/accounts/add-employee')}`} to="/accounts/add-employee">
-                    Add Employee
-                  </Link>
-                </li>
               </>
             )}
           </ul>

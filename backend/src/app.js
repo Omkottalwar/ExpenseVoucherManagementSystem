@@ -34,6 +34,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/vouchers', voucherRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 
+
 // Root route placeholder
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Expense Voucher Management API' });
