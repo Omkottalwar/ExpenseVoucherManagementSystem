@@ -92,6 +92,9 @@ const sendCredentialsEmail = async (email, name, password, role) => {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        connectionTimeout: 3000, // 3 seconds
+        greetingTimeout: 3000,
+        socketTimeout: 3000,
       });
 
       const htmlContent = getEmailHtml(email, name, password, role);
@@ -199,6 +202,9 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        connectionTimeout: 3000, // 3 seconds
+        greetingTimeout: 3000,
+        socketTimeout: 3000,
       });
 
       const htmlContent = getResetHtml();
