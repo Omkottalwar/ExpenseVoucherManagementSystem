@@ -9,7 +9,6 @@ const AddEmployee = () => {
   const [employeeId, setEmployeeId] = useState('');
   const [department, setDepartment] = useState('');
   const [role, setRole] = useState('Employee');
-  const [password, setPassword] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,8 +30,7 @@ const AddEmployee = () => {
         email: email.trim().toLowerCase(),
         role,
         employeeId: employeeId.trim() || undefined,
-        department: department.trim() || undefined,
-        password: password.trim() || undefined
+        department: department.trim() || undefined
       };
 
       const res = await apiClient.post('/auth/add-employee', payload);
@@ -65,7 +63,6 @@ const AddEmployee = () => {
     setEmployeeId('');
     setDepartment('');
     setRole('Employee');
-    setPassword('');
     setError('');
     setSuccessData(null);
   };
@@ -219,21 +216,6 @@ const AddEmployee = () => {
                       <option value="Director">Director (Approve/Reject claims)</option>
                       <option value="Accounts">Accounts (Audit/Pay claims)</option>
                     </select>
-                  </div>
-
-                  {/* Password */}
-                  <div className="col-md-6">
-                    <label className="form-label small text-secondary fw-semibold">Password</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Leave blank to auto-generate"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <div className="form-text small text-muted">
-                      If left blank, a secure password will be generated and emailed via Resend.
-                    </div>
                   </div>
                 </div>
 
