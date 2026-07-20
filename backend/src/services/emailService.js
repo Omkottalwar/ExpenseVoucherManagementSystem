@@ -96,24 +96,58 @@ const getEmailHtml = (email, name, password, role) => {
 };
 
 const sendCredentialsEmail = async (email, name, password, role) => {
-  // If SMTP configs are specified in the env, prefer SMTP (Nodemailer)
+  const htmlContent = getEmailHtml(email, name, password, role);
+
+  // Strategy: Try Resend API first (works on cloud hosts like Render where SMTP port 587 is blocked),
+  // then fall back to SMTP (works on local dev and servers with open outbound SMTP).
+
+  // --- Attempt 1: Resend HTTP API ---
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    try {
+      console.log(`Attempting credentials email delivery to ${email} via Resend API.`);
+      const payload = {
+        from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
+        to: email,
+        subject: 'Your ExpenseVoucher Credentials',
+        html: htmlContent,
+      };
+
+      const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        }
+      }, payload);
+
+      if (resResult.ok) {
+        console.log('Credentials email sent successfully via Resend API to', email);
+        return { success: true, data: resResult.data };
+      }
+      console.error('Resend API error response:', resResult.data || resResult.raw);
+    } catch (error) {
+      console.error('Resend API request failed, falling back to SMTP:', error.message);
+    }
+  }
+
+  // --- Attempt 2: SMTP (Nodemailer) fallback ---
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     try {
+      console.log(`Attempting credentials email delivery to ${email} via SMTP.`);
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT || '587', 10),
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+        secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
         family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6 resolution
-        connectionTimeout: 10000, // 10 seconds – 3s was too tight on some networks
+        connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 10000,
       });
-
-      const htmlContent = getEmailHtml(email, name, password, role);
 
       const mailOptions = {
         from: process.env.SMTP_FROM_EMAIL || `ExpenseVoucher <${process.env.SMTP_USER}>`,
@@ -123,55 +157,18 @@ const sendCredentialsEmail = async (email, name, password, role) => {
       };
 
       const info = await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully via SMTP:', info.messageId);
+      console.log('Credentials email sent successfully via SMTP:', info.messageId);
       return { success: true, data: info };
     } catch (error) {
-      console.error('Failed to send credentials email via SMTP (Nodemailer). Attempting Resend API fallback:', error);
+      console.error('Failed to send credentials email via SMTP:', error.message);
     }
   }
 
-  // Fallback to Resend HTTP API
-  console.log('Attempting delivery via Resend API.');
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error('Resend API key is not configured in environment variables.');
-    return { success: false, error: 'Email service configuration error: Resend API key missing.' };
-  }
-  
-  const htmlContent = getEmailHtml(email, name, password, role);
-
-  try {
-    const payload = {
-      from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
-      to: email,
-      subject: 'Your ExpenseVoucher Credentials',
-      html: htmlContent,
-    };
-
-    const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      }
-    }, payload);
-
-    if (!resResult.ok) {
-      console.error('Resend API error response:', resResult.data || resResult.raw);
-      return { success: false, error: (resResult.data && resResult.data.message) || 'Failed to send credentials email via Resend' };
-    }
-
-    return { success: true, data: resResult.data };
-  } catch (error) {
-    console.error('Failed to send credentials email via Resend:', error);
-    return { success: false, error: error.message };
-  }
+  console.error('All email delivery methods exhausted. Ensure RESEND_API_KEY or SMTP_USER/SMTP_PASS are configured.');
+  return { success: false, error: 'No email transport available. Check server configuration.' };
 };
 
 const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee') => {
-  // Overriding recipient email to omkottalwar17@gmail.com for testing purposes since it is the only registered Resend email address
-  const recipientEmail = 'omkottalwar17@gmail.com';
-
   const getResetHtml = () => {
     return `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -208,9 +205,42 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
 
   const htmlContent = getResetHtml();
 
-  // If SMTP configs are specified, prefer SMTP (Nodemailer)
+  // Strategy: Try Resend API first (works on Render), fall back to SMTP (works locally).
+
+  // --- Attempt 1: Resend HTTP API ---
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    try {
+      console.log(`Attempting reset email delivery to ${email} via Resend API.`);
+      const payload = {
+        from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
+        to: email,
+        subject: `Reset your ExpenseVoucher Password [${portal} Portal]`,
+        html: htmlContent,
+      };
+
+      const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        }
+      }, payload);
+
+      if (resResult.ok) {
+        console.log('Reset email sent successfully via Resend API to', email);
+        return { success: true, data: resResult.data };
+      }
+      console.error('Resend API reset error response:', resResult.data || resResult.raw);
+    } catch (error) {
+      console.error('Resend API reset request failed, falling back to SMTP:', error.message);
+    }
+  }
+
+  // --- Attempt 2: SMTP (Nodemailer) fallback ---
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     try {
+      console.log(`Attempting reset email delivery to ${email} via SMTP.`);
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT || '587', 10),
@@ -220,14 +250,14 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
           pass: process.env.SMTP_PASS,
         },
         family: 4, // Force IPv4 to prevent ENETUNREACH on IPv6 resolution
-        connectionTimeout: 10000, // 10 seconds – 3s was too tight on some networks
+        connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 10000,
       });
 
       const mailOptions = {
         from: process.env.SMTP_FROM_EMAIL || `ExpenseVoucher <${process.env.SMTP_USER}>`,
-        to: recipientEmail,
+        to: email,
         subject: `Reset your ExpenseVoucher Password [${portal} Portal]`,
         html: htmlContent,
       };
@@ -236,44 +266,12 @@ const sendResetPasswordEmail = async (email, name, resetUrl, portal = 'Employee'
       console.log('Reset email sent successfully via SMTP:', info.messageId);
       return { success: true, data: info };
     } catch (error) {
-      console.error('Failed to send reset email via SMTP (Nodemailer). Attempting Resend API fallback:', error);
+      console.error('Failed to send reset email via SMTP:', error.message);
     }
   }
 
-  // Fallback to Resend API
-  console.log('Attempting reset email delivery via Resend API.');
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error('Resend API key is not configured in environment variables.');
-    return { success: false, error: 'Email service configuration error: Resend API key missing.' };
-  }
-
-  try {
-    const payload = {
-      from: process.env.RESEND_FROM_EMAIL || 'ExpenseVoucher <onboarding@resend.dev>',
-      to: recipientEmail,
-      subject: `Reset your ExpenseVoucher Password [${portal} Portal]`,
-      html: htmlContent,
-    };
-
-    const resResult = await makeHttpsRequest('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      }
-    }, payload);
-
-    if (!resResult.ok) {
-      console.error('Resend API reset error response:', resResult.data || resResult.raw);
-      return { success: false, error: (resResult.data && resResult.data.message) || 'Failed to send reset email via Resend' };
-    }
-
-    return { success: true, data: resResult.data };
-  } catch (error) {
-    console.error('Failed to send reset email via Resend:', error);
-    return { success: false, error: error.message };
-  }
+  console.error('All email delivery methods exhausted for reset email.');
+  return { success: false, error: 'No email transport available. Check server configuration.' };
 };
 
 module.exports = { sendCredentialsEmail, sendResetPasswordEmail };
