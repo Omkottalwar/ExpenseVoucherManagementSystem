@@ -49,15 +49,17 @@ const AccountsVoucherDetails = () => {
 
   return (
     <div className="container py-4">
-      <div className="d-flex align-items-center mb-4 no-print">
-        <button onClick={() => navigate(-1)} className="btn btn-outline-secondary btn-sm me-3">
-          <i className="bi bi-arrow-left"></i> Back
-        </button>
-        <div>
-          <h2 className="fw-bold mb-0">Expense Voucher</h2>
-          <span className="text-muted small">Number: {voucher.voucherNumber}</span>
+      <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4 no-print">
+        <div className="d-flex align-items-center">
+          <button onClick={() => navigate(-1)} className="btn btn-outline-secondary btn-sm me-3">
+            <i className="bi bi-arrow-left"></i> Back
+          </button>
+          <div>
+            <h2 className="fw-bold mb-0 fs-3 fs-md-2">Expense Voucher</h2>
+            <span className="text-muted small">Number: {voucher.voucherNumber}</span>
+          </div>
         </div>
-        <button onClick={handlePrint} className="btn btn-primary btn-sm ms-auto d-flex align-items-center gap-2">
+        <button onClick={handlePrint} className="btn btn-primary btn-sm d-flex align-items-center gap-2">
           <i className="bi bi-printer"></i> Export / Print Voucher
         </button>
       </div>

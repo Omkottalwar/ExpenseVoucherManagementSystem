@@ -124,7 +124,7 @@ const VoucherDetailsApproval = () => {
           <i className="bi bi-arrow-left"></i> Back
         </button>
         <div>
-          <h2 className="fw-bold mb-0">Review Voucher</h2>
+          <h2 className="fw-bold mb-0 fs-3 fs-md-2">Review Voucher</h2>
           <span className="text-muted small">ID: {voucher.voucherNumber}</span>
         </div>
       </div>

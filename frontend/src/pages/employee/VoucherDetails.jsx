@@ -83,15 +83,17 @@ const VoucherDetails = () => {
 
   return (
     <div className="container py-4">
-      <div className="d-flex align-items-center mb-4 no-print">
-        <button onClick={() => navigate('/employee/vouchers')} className="btn btn-outline-secondary btn-sm me-3">
-          <i className="bi bi-arrow-left"></i> Back
-        </button>
-        <div>
-          <h2 className="fw-bold mb-0">Voucher Details</h2>
-          <span className="text-muted small">Number: {voucher.voucherNumber}</span>
+      <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4 no-print">
+        <div className="d-flex align-items-center">
+          <button onClick={() => navigate('/employee/vouchers')} className="btn btn-outline-secondary btn-sm me-3">
+            <i className="bi bi-arrow-left"></i> Back
+          </button>
+          <div>
+            <h2 className="fw-bold mb-0 fs-3 fs-md-2">Voucher Details</h2>
+            <span className="text-muted small">Number: {voucher.voucherNumber}</span>
+          </div>
         </div>
-        <div className="ms-auto d-inline-flex gap-2">
+        <div className="d-flex flex-wrap gap-2">
           {isDraft && (
             <>
               <Link to={`/employee/vouchers/${voucher._id}/edit`} className="btn btn-primary btn-sm">
